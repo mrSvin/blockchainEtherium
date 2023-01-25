@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"blockchainEtherium/api"
+	"blockchainEtherium/cmd/conf"
 	"bytes"
 	"context"
 	"crypto/ecdsa"
@@ -17,12 +18,12 @@ import (
 	"math/big"
 )
 
-var gateway = "http://127.0.0.1:22000"
-var accountPrivateKey = "823262d751eb94c76e0d3fc8d2120d84f7b0a165fe6729caabb3fd9611e17fb8"
-var accountHexAddress = "0x319EA029C226C8eB40344c7338DFF006B0f50799"
-var smartContractHexAddress = "0xCdAAf8E8bfd5b6127eB09d78d98AEC1C937B8C43"
+var gateway = conf.ViperEnvVariable("gateway")
+var accountPrivateKey = conf.ViperEnvVariable("accountPrivateKey")
+var accountHexAddress = conf.ViperEnvVariable("accountHexAddress")
+var smartContractHexAddress = conf.ViperEnvVariable("smartContractHexAddress")
 
-func CheckContract(contractHexAddress string) {
+func CheckContract(contractHexAddress string) bool {
 
 	client, err := ethclient.Dial(gateway)
 	if err != nil {
@@ -38,7 +39,8 @@ func CheckContract(contractHexAddress string) {
 
 	isContract := len(bytecode) > 0
 
-	fmt.Printf("is contract: %v\n", isContract) // is contract: true
+	//fmt.Printf("is contract: %v\n", isContract) // is contract: true
+	return isContract
 }
 
 func getBlock() {
@@ -324,12 +326,7 @@ func DeploySmartContract() {
 }
 
 func ReadWalletSmartContract(nameWallet string) {
-	client, err := ethclient.Dial(gateway)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	address := common.HexToAddress(smartContractHexAddress)
+	client, address := ConnectContract(gateway, smartContractHexAddress)
 	instance, err := api.NewApi(address, client)
 	if err != nil {
 		log.Fatal(err)
@@ -344,40 +341,7 @@ func ReadWalletSmartContract(nameWallet string) {
 }
 
 func CreateWalletSmartContract(nameWallet string, balance int64) {
-	client, err := ethclient.Dial(gateway)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	privateKey, err := crypto.HexToECDSA(accountPrivateKey)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
-	}
-
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	auth := bind.NewKeyedTransactor(privateKey)
-	auth.Nonce = big.NewInt(int64(nonce))
-	auth.Value = big.NewInt(0)             // in wei
-	auth.GasLimit = uint64(3000000)        // in units
-	auth.GasPrice = big.NewInt(1000000000) // in wei
-
-	address := common.HexToAddress(smartContractHexAddress)
-	instance, err := api.NewApi(address, client)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	auth, instance := ConnectChangeContract(gateway, smartContractHexAddress, accountPrivateKey)
 	tx, err := instance.SetWallet(auth, nameWallet, big.NewInt(balance))
 	if err != nil {
 		log.Fatal(err)
@@ -388,7 +352,27 @@ func CreateWalletSmartContract(nameWallet string, balance int64) {
 }
 
 func SendMoneySnartContract(nameWalletSender string, nameWalletRecipient string, sendMoney int64) {
+	auth, instance := ConnectChangeContract(gateway, smartContractHexAddress, accountPrivateKey)
+	tx, err := instance.SendMoney(auth, nameWalletSender, nameWalletRecipient, big.NewInt(sendMoney))
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	fmt.Println("tx sent:", tx.Hash().Hex()) // tx sent: 0x8d490e535678e9a24360e955d75b27ad307bdfb97a1dca51d0f3035dcee3e870
+
+}
+
+func ConnectContract(gateway string, smartContractHexAddress string) (*ethclient.Client, common.Address) {
+	client, err := ethclient.Dial(gateway)
+	if err != nil {
+		log.Fatal(err)
+	}
+	address := common.HexToAddress(smartContractHexAddress)
+
+	return client, address
+}
+
+func ConnectChangeContract(gateway string, smartContractHexAddress string, accountPrivateKey string) (*bind.TransactOpts, *api.Api) {
 	client, err := ethclient.Dial(gateway)
 	if err != nil {
 		log.Fatal(err)
@@ -422,12 +406,5 @@ func SendMoneySnartContract(nameWalletSender string, nameWalletRecipient string,
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	tx, err := instance.SendMoney(auth, nameWalletSender, nameWalletRecipient, big.NewInt(sendMoney))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("tx sent:", tx.Hash().Hex()) // tx sent: 0x8d490e535678e9a24360e955d75b27ad307bdfb97a1dca51d0f3035dcee3e870
-
+	return auth, instance
 }
