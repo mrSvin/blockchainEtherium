@@ -22,18 +22,19 @@ abigen --bin=./build/Store_sol_Store.bin --abi=./build/Store_sol_Store.abi --pkg
 ## Ganache
 Запустить Ganache Etherium
 
-## Необходимо скопировать с Ganache в переменные blockchain.go
+## Необходимо с Ganache взять переременнные и установить их в переменную среду app.env
 ```
-var gateway = <адрес с портом etherium>
-var accountPrivateKey = <Приватный ключ аккаунта etherium>
-var accountHexAddress = <Hex адресс используемого аккаунта>
-var smartContractHexAddress = <Hex адресс задеплоиного контракта>
+gateway = <адрес с портом etherium>
+accountPrivateKey = <Приватный ключ аккаунта etherium>
+accountHexAddress = <Hex адресс используемого аккаунта>
+smartContractHexAddress = <Hex адресс задеплоиного контракта>
 ```
 ## Взаимодействие с CLI
 находясь в корневом каталоге проекта выполняем
 ```
 cd cmd/app   
 ```
+
 ### Команды CLI
 #### Деплой контакта
 ```
@@ -68,3 +69,12 @@ go run main.go readWallet two
 ``
 {two 58000}
 ``
+## Запуск тестов
+находясь в корневом каталоге проекта выполняем
+```
+cd test 
+```
+выполнить команду запуска тестов
+```
+go test 
+```
