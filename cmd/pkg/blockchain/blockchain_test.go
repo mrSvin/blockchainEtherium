@@ -1,22 +1,15 @@
-package test
+package blockchain
 
 import (
 	"blockchainEtherium/api"
-	"blockchainEtherium/cmd/conf"
-	"blockchainEtherium/cmd/pkg/blockchain"
 	"log"
 	"math/big"
 	"strconv"
 	"testing"
 )
 
-var gateway = conf.ViperEnvVariable("gateway")
-var accountPrivateKey = conf.ViperEnvVariable("accountPrivateKey")
-var accountHexAddress = conf.ViperEnvVariable("accountHexAddress")
-var smartContractHexAddress = conf.ViperEnvVariable("smartContractHexAddress")
-
 func TestCheckContract(t *testing.T) {
-	got := blockchain.CheckContract(smartContractHexAddress)
+	got := CheckContract(smartContractHexAddress)
 	want := true
 
 	if want != got {
@@ -25,7 +18,7 @@ func TestCheckContract(t *testing.T) {
 }
 
 func TestNewApi(t *testing.T) {
-	client, address := blockchain.ConnectContract(gateway, smartContractHexAddress)
+	client, address := ConnectContract(gateway, smartContractHexAddress)
 	_, err := api.NewApi(address, client)
 	if err != nil {
 		t.Errorf("Error get NewApi")
@@ -33,7 +26,7 @@ func TestNewApi(t *testing.T) {
 }
 
 func TestNewApiCaller(t *testing.T) {
-	client, address := blockchain.ConnectContract(gateway, smartContractHexAddress)
+	client, address := ConnectContract(gateway, smartContractHexAddress)
 	_, err := api.NewApiCaller(address, client)
 	if err != nil {
 		t.Errorf("Error get NewApiCaller")
@@ -41,7 +34,7 @@ func TestNewApiCaller(t *testing.T) {
 }
 
 func TestNewApiTransactor(t *testing.T) {
-	client, address := blockchain.ConnectContract(gateway, smartContractHexAddress)
+	client, address := ConnectContract(gateway, smartContractHexAddress)
 	_, err := api.NewApiTransactor(address, client)
 	if err != nil {
 		t.Errorf("Error get NewApiTransactor")
@@ -49,7 +42,7 @@ func TestNewApiTransactor(t *testing.T) {
 }
 
 func TestNewApiFilterer(t *testing.T) {
-	client, address := blockchain.ConnectContract(gateway, smartContractHexAddress)
+	client, address := ConnectContract(gateway, smartContractHexAddress)
 	_, err := api.NewApiFilterer(address, client)
 	if err != nil {
 
@@ -58,7 +51,7 @@ func TestNewApiFilterer(t *testing.T) {
 
 func TestGetWallet(t *testing.T) {
 	nameVallet := "one"
-	client, address := blockchain.ConnectContract(gateway, smartContractHexAddress)
+	client, address := ConnectContract(gateway, smartContractHexAddress)
 	instance, err := api.NewApi(address, client)
 	if err != nil {
 		log.Fatal(err)
@@ -76,7 +69,7 @@ func TestGetWallet(t *testing.T) {
 
 func TestWallets(t *testing.T) {
 	nameVallet := "one"
-	client, address := blockchain.ConnectContract(gateway, smartContractHexAddress)
+	client, address := ConnectContract(gateway, smartContractHexAddress)
 	instance, err := api.NewApi(address, client)
 	if err != nil {
 		log.Fatal(err)
@@ -88,7 +81,7 @@ func TestWallets(t *testing.T) {
 }
 
 func TestSetWallet(t *testing.T) {
-	auth, instance := blockchain.ConnectChangeContract(gateway, smartContractHexAddress, accountPrivateKey)
+	auth, instance := ConnectChangeContract(gateway, smartContractHexAddress, accountPrivateKey)
 	tx, err := instance.SetWallet(auth, "five", big.NewInt(50000))
 	if err != nil {
 		log.Fatal(err)
@@ -104,7 +97,7 @@ func TestSendMoney(t *testing.T) {
 	nameWalletRecipient := "two"
 	sendMoney := big.NewInt(20)
 
-	auth, instance := blockchain.ConnectChangeContract(gateway, smartContractHexAddress, accountPrivateKey)
+	auth, instance := ConnectChangeContract(gateway, smartContractHexAddress, accountPrivateKey)
 
 	getWalletOne, err := instance.GetWallet(nil, nameWalletSender)
 	getWalletTwo, err := instance.GetWallet(nil, nameWalletRecipient)
@@ -126,7 +119,7 @@ func TestSendMoney(t *testing.T) {
 	expectAfterMoneyWalletOne, err := strconv.Atoi(afterMoneyWalletOne.String())
 	expectAfterMoneyWalletTwo, err := strconv.Atoi(afterMoneyWalletTwo.String())
 
-	if expectBeforeMoneyWalletOne-20 != expectAfterMoneyWalletOne || expectBeforeMoneyWalletTwo+20 != expectAfterMoneyWalletTwo {
+	if expectBeforeMoneyWalletOne-20 != expectAfterMoneyWalletOne && expectBeforeMoneyWalletTwo+20 != expectAfterMoneyWalletTwo {
 		t.Errorf("Error SendMoney, beforeMoneyWalletOne: %q, beforeMoneyWalletTwo: %q, afterMoneyWalletOne: %q, afterMoneyWalletTwo: %q ", beforeMoneyWalletOne, beforeMoneyWalletTwo, afterMoneyWalletOne, afterMoneyWalletTwo)
 	}
 

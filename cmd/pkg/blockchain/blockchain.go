@@ -18,10 +18,11 @@ import (
 	"math/big"
 )
 
-var gateway = conf.ViperEnvVariable("gateway")
-var accountPrivateKey = conf.ViperEnvVariable("accountPrivateKey")
-var accountHexAddress = conf.ViperEnvVariable("accountHexAddress")
-var smartContractHexAddress = conf.ViperEnvVariable("smartContractHexAddress")
+var pathConfig = "../../conf/"
+var gateway = conf.ViperEnvVariable("gateway", pathConfig)
+var accountPrivateKey = conf.ViperEnvVariable("accountPrivateKey", pathConfig)
+var accountHexAddress = conf.ViperEnvVariable("accountHexAddress", pathConfig)
+var smartContractHexAddress = conf.ViperEnvVariable("smartContractHexAddress", pathConfig)
 
 func CheckContract(contractHexAddress string) bool {
 
@@ -265,7 +266,7 @@ func sendTransaction() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("tx sent: %s", tx.Hash().Hex()) // tx sent: 0xc429e5f128387d224ba8bed6885e86525e14bfdc2eb24b5e9c3351a1176fd81f
+	fmt.Println("tx sent: ", tx.Hash().Hex()) // tx sent: 0xc429e5f128387d224ba8bed6885e86525e14bfdc2eb24b5e9c3351a1176fd81f
 
 }
 
@@ -362,12 +363,12 @@ func SendMoneySnartContract(nameWalletSender string, nameWalletRecipient string,
 
 }
 
-func ConnectContract(gateway string, smartContractHexAddress string) (*ethclient.Client, common.Address) {
-	client, err := ethclient.Dial(gateway)
+func ConnectContract(gatewayInput string, smartContractHexAddressInput string) (*ethclient.Client, common.Address) {
+	client, err := ethclient.Dial(gatewayInput)
 	if err != nil {
 		log.Fatal(err)
 	}
-	address := common.HexToAddress(smartContractHexAddress)
+	address := common.HexToAddress(smartContractHexAddressInput)
 
 	return client, address
 }

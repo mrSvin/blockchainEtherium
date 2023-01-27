@@ -5,9 +5,9 @@ import (
 	"log"
 )
 
-func ViperEnvVariable(key string) string {
-
-	viper.SetConfigFile("../conf/app.env")
+func ViperEnvVariable(key string, path string) string {
+	viper.SetConfigName("app")
+	viper.AddConfigPath(path)
 	err := viper.ReadInConfig()
 
 	if err != nil {
